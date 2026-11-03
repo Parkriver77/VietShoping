@@ -32,6 +32,19 @@ jobs:
             echo "::error::NETLIFY_AUTH_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions 에 추가하세요."
             exit 1
           fi
+          # 토큰 점검: 어느 계정 토큰인지, 이 프로젝트에 접근되는지 먼저 확인
+          code=$(curl -s -o /tmp/u.json -w "%{http_code}" -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/user)
+          if [ "$code" != "200" ]; then
+            echo "::error::Netlify 토큰이 올바르지 않습니다 (HTTP $code). 토큰 이름이 아니라 만들 때 한 번만 보이는 긴 토큰 값을 넣었는지 확인하세요."
+            exit 1
+          fi
+          email=$(python3 -c "import json;e=json.load(open('/tmp/u.json')).get('email','');print(e[:3]+'***'+e[e.find('@'):])")
+          echo "토큰 계정: $email"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID)
+          if [ "$code" != "200" ]; then
+            echo "::error::이 토큰($email)으로는 vietshoping 프로젝트가 보이지 않습니다 (HTTP $code). vietshoping 프로젝트가 있는 Netlify 계정으로 로그인해서 토큰을 다시 만드세요."
+            exit 1
+          fi
           npx -y netlify-cli@23 deploy --prod --dir=public --functions=netlify/functions --site="$NETLIFY_SITE_ID" --message "GitHub manual deploy ${GITHUB_SHA::7}"
 
       - name: Smoke test
