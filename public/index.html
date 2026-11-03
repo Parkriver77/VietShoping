@@ -432,7 +432,7 @@ Your prices are estimates from general knowledge, not live data; keep ranges rea
 }
 
 // ---------- 실시간 가격 비교 (Netlify 검색 서버) ----------
-const API_BASE = /\.netlify\.app$/.test(location.hostname) ? "" : "https://vietshoping-app.netlify.app";
+const API_BASE = /\.netlify\.app$/.test(location.hostname) ? "" : "https://vietshoping.netlify.app";
 const STORE_TIER = {"Thế Giới Di Động":"t-official","Phong Vũ":"t-official","Tiki":"t-platform","Chotot":"t-caution"};
 let live = { items: [], shown: 0, budget: 0 };
 const vnd = n => n == null ? "가격 문의" : n.toLocaleString("vi-VN") + "₫";
@@ -471,7 +471,7 @@ async function runLive(v){
   } catch (e) {
     const blocked = e instanceof TypeError || e.name === "AbortError";
     $("results").innerHTML = blocked
-      ? `<p class="empty">가격 서버에 연결하지 못했어요. 이 화면에서는 실시간 비교가 막혀 있을 수 있어요. <b>vietshoping-app.netlify.app</b> 주소로 열어 주세요.</p>`
+      ? `<p class="empty">가격 서버에 연결하지 못했어요. 이 화면에서는 실시간 비교가 막혀 있을 수 있어요. <b>vietshoping.netlify.app</b> 주소로 열어 주세요.</p>`
       : `<p class="empty">가격을 가져오지 못했어요: ${esc(e.message)}</p>`;
   }
 }

@@ -10,7 +10,7 @@ permissions:
 
 env:
   # 토큰 주인 계정에서 이 이름의 프로젝트를 찾고, 없으면 새로 만든다
-  NETLIFY_SITE_NAME: vietshoping-app
+  NETLIFY_SITE_NAME: vietshoping
 
 jobs:
   deploy:
@@ -60,4 +60,4 @@ jobs:
       - name: Smoke test
         run: |
           sleep 5
-          curl -sS "https://vietshoping-app.netlify.app/api/search?q=iphone%2016&used=2" | head -c 1500; echo
+          curl -sS "https://vietshoping.netlify.app/api/search?q=iphone%2016&used=2" | head -c 1500; echo

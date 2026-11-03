@@ -20,7 +20,7 @@ jobs:
           for q in "${QS[@]}"; do
             enc=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$q")
             echo "===== $q"
-            curl -sS --max-time 40 "https://vietshoping-app.netlify.app/api/search?q=$enc&used=2&nocache=$RANDOM" -o r.json -w "HTTP %{http_code} in %{time_total}s\n"
+            curl -sS --max-time 40 "https://vietshoping.netlify.app/api/search?q=$enc&used=2&nocache=$RANDOM" -o r.json -w "HTTP %{http_code} in %{time_total}s\n"
             python3 - <<'PY'
           import json
           try:
