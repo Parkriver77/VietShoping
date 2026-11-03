@@ -1,0 +1,35 @@
+name: Check price search (manual)
+
+# 배포 없이 가격 비교 서버가 매장별로 결과를 가져오는지만 확인한다
+on:
+  workflow_dispatch:
+    inputs:
+      queries:
+        description: "검색어 (| 로 구분)"
+        default: "iphone 16|laptop asus vivobook|mini PC|noi chien khong dau philips"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query API
+        env:
+          QUERIES: ${{ inputs.queries }}
+        run: |
+          IFS='|' read -ra QS <<< "$QUERIES"
+          for q in "${QS[@]}"; do
+            enc=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$q")
+            echo "===== $q"
+            curl -sS --max-time 40 "https://vietshoping-app.netlify.app/api/search?q=$enc&used=2&nocache=$RANDOM" -o r.json -w "HTTP %{http_code} in %{time_total}s\n"
+            python3 - <<'PY'
+          import json
+          try:
+              j = json.load(open('r.json'))
+          except Exception as e:
+              print('NOT JSON:', open('r.json').read()[:300]); raise SystemExit
+          for s in j.get('sources', []):
+              print(f"  {s['store']:18} ok={s['ok']} count={s['count']} {s.get('error','')} {s['ms']}ms")
+          for i in j.get('items', [])[:12]:
+              print(f"    - {i['store'][:10]:10} {str(i.get('price')):>11} {'T' if i.get('trusted') else ' '} {i['name'][:60]} | {i['url'][:70]}")
+          PY
+          done
