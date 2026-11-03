@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>안심쇼핑 VN</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: one narrow column — search form on top, trusted-store links, then AI check card. Tier colour = trust level. */
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --ink:#16241F; --muted:#5E6E67; --line:#D9E0DB;
+  --jade:#0E7A5F; --jade-soft:#E1F1EA; --amber:#A86400; --amber-soft:#FBEFD9;
+  --red:#B3261E; --red-soft:#FBE4E2; --blue:#2958A8; --blue-soft:#E4ECF9;
+  --font-body:"Noto Sans KR","Be Vietnam Pro",system-ui,sans-serif;
+  --font-vi:"Be Vietnam Pro","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101815; --surface:#18231F; --ink:#E6EEEA; --muted:#97A8A0; --line:#2A3833;
+  --jade:#4FC7A2; --jade-soft:#173A30; --amber:#E9AE54; --amber-soft:#3A2D16;
+  --red:#F08A82; --red-soft:#3D1F1D; --blue:#8DB0F0; --blue-soft:#1C2A44; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101815; --surface:#18231F; --ink:#E6EEEA; --muted:#97A8A0; --line:#2A3833;
+  --jade:#4FC7A2; --jade-soft:#173A30; --amber:#E9AE54; --amber-soft:#3A2D16;
+  --red:#F08A82; --red-soft:#3D1F1D; --blue:#8DB0F0; --blue-soft:#1C2A44; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header h1{font-size:1.65rem;font-weight:800;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header h1 span{color:var(--jade)}
+header p{margin:6px 0 0;color:var(--muted)}
+.vi{font-family:var(--font-vi)}
+form{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-bottom:6px}
+input,select{width:100%;box-sizing:border-box;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.row{grid-template-columns:1fr}}
+.seg{display:flex;gap:6px}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg label{flex:1;margin:0;text-align:center;padding:10px 4px;border:1px solid var(--line);border-radius:10px;cursor:pointer;color:var(--ink);font-weight:500;font-size:.9rem;letter-spacing:0;background:var(--bg)}
+.seg input:checked+label{background:var(--jade);border-color:var(--jade);color:var(--surface);font-weight:700}
+.seg input:focus-visible+label{outline:2px solid var(--jade);outline-offset:2px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:13px 16px;cursor:pointer;background:var(--jade);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--jade);border:1px solid var(--jade)}
+.btn:disabled{opacity:.55;cursor:wait}
+h2{font-size:1.05rem;margin:0 0 4px;font-weight:800}
+.sub{color:var(--muted);font-size:.88rem;margin:0 0 12px}
+.example{display:inline-block;font-size:.72rem;font-weight:700;color:var(--amber);background:var(--amber-soft);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:2px}
+.stores{display:grid;gap:8px}
+.store{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tier);border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--ink)}
+.store:hover{border-color:var(--tier)}
+.store .meta{flex:1;min-width:0}
+.store .name{font-family:var(--font-vi);font-weight:700}
+.store .note{font-size:.84rem;color:var(--muted)}
+.chip{flex:none;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--tier-soft);color:var(--tier)}
+.t-official{--tier:var(--jade);--tier-soft:var(--jade-soft)}
+.t-platform{--tier:var(--blue);--tier-soft:var(--blue-soft)}
+.t-caution{--tier:var(--amber);--tier-soft:var(--amber-soft)}
+.t-compare{--tier:var(--muted);--tier-soft:var(--bg)}
+.arrow{color:var(--muted);flex:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:480px){.kv{grid-template-columns:1fr}}
+.kv div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.kv b{display:block;font-size:.74rem;color:var(--muted);letter-spacing:.03em}
+.kv span{font-weight:700;font-variant-numeric:tabular-nums}
+.list h3{font-size:.86rem;margin:0 0 6px}
+.list ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.list.red h3{color:var(--red)}
+.list.red{background:var(--red-soft);border-radius:10px;padding:12px 14px}
+.disclaimer{font-size:.8rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.status{color:var(--muted);font-size:.9rem}
+.err{color:var(--red);font-size:.9rem}
+.copybox{display:grid;gap:10px}
+.copybox textarea{width:100%;box-sizing:border-box;min-height:96px;font:inherit;font-size:.88rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.pc{border:1px solid var(--line);border-radius:12px;padding:12px 14px 14px;margin:0;min-width:0}
+.pc legend{font-weight:800;font-size:.9rem;padding:0 6px}
+.pc legend span{font-weight:500;color:var(--muted);font-size:.8rem;margin-left:4px}
+.pcgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.specline{font-size:.84rem;color:var(--muted);margin:-4px 0 10px}
+.specline b{color:var(--ink);font-family:var(--font-vi)}
+.hint{font-size:.8rem;color:var(--muted);margin-top:6px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:.78rem}
+.legend .chip{display:inline-block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>안심쇼핑 <span>VN</span></h1>
+    <p>베트남에서 정품 보증이 확실한 매장만 골라서 한 번에 찾아봅니다.</p>
+  </header>
+
+  <form id="f" autocomplete="off">
+    <div>
+      <label for="q">제품명 또는 모델명</label>
+      <input id="q" class="vi" placeholder="예: Philips HD9252, iPhone 16 128GB">
+      <p class="hint" id="qHint" hidden>컴퓨터는 모델명 없이 사양만 골라도 검색돼요.</p>
+    </div>
+    <div class="row">
+      <div>
+        <label for="cat">종류</label>
+        <select id="cat">
+          <option value="computer">컴퓨터 · 노트북 · 미니 PC</option>
+          <option value="phone">휴대폰 · 태블릿</option>
+          <option value="appliance">가전 · 주방기기</option>
+          <option value="beauty">화장품 · 건강용품</option>
+          <option value="baby">유아용품</option>
+          <option value="home">생활용품 · 기타</option>
+        </select>
+      </div>
+      <div>
+        <label for="budget">예산 (VND, 선택)</label>
+        <input id="budget" inputmode="numeric" placeholder="예: 2,500,000">
+      </div>
+    </div>
+    <fieldset id="pc" class="pc" hidden>
+      <legend>컴퓨터 사양 <span>원하는 것만 고르세요</span></legend>
+      <div class="pcgrid">
+        <div>
+          <label for="pcType">기기 종류</label>
+          <select id="pcType">
+            <option value="">상관없음</option>
+            <option value="laptop">노트북</option>
+            <option value="gaming">게이밍 노트북</option>
+            <option value="minipc">미니 PC</option>
+            <option value="desktop">데스크톱 본체</option>
+            <option value="aio">일체형 PC (올인원)</option>
+            <option value="macbook">맥북</option>
+          </select>
+        </div>
+        <div>
+          <label for="cpu">CPU</label>
+          <select id="cpu">
+            <option value="">상관없음</option>
+            <option>Intel Core i3</option><option>Intel Core i5</option><option>Intel Core i7</option><option>Intel Core i9</option>
+            <option>Intel Core Ultra 5</option><option>Intel Core Ultra 7</option><option>Intel N100</option>
+            <option>AMD Ryzen 3</option><option>AMD Ryzen 5</option><option>AMD Ryzen 7</option><option>AMD Ryzen 9</option>
+            <option>Apple M2</option><option>Apple M3</option><option>Apple M4</option>
+          </select>
+        </div>
+        <div>
+          <label for="ram">램 용량</label>
+          <select id="ram">
+            <option value="">상관없음</option>
+            <option>4GB</option><option>8GB</option><option>16GB</option><option>24GB</option><option>32GB</option><option>64GB</option>
+          </select>
+        </div>
+        <div>
+          <label for="ramType">램 종류</label>
+          <select id="ramType">
+            <option value="">상관없음</option>
+            <option>DDR4</option><option>DDR5</option><option>LPDDR4X</option><option>LPDDR5</option><option>LPDDR5X</option>
+          </select>
+        </div>
+        <div>
+          <label for="storage">저장 용량</label>
+          <select id="storage">
+            <option value="">상관없음</option>
+            <option>128GB</option><option>256GB</option><option>512GB</option><option>1TB</option><option>2TB</option>
+          </select>
+        </div>
+        <div>
+          <label for="storageType">저장장치 종류</label>
+          <select id="storageType">
+            <option value="">상관없음</option>
+            <option value="SSD NVMe">SSD (NVMe)</option>
+            <option value="SSD SATA">SSD (SATA)</option>
+            <option value="HDD">HDD</option>
+            <option value="eMMC">eMMC</option>
+          </select>
+        </div>
+        <div>
+          <label for="gpu">그래픽</label>
+          <select id="gpu">
+            <option value="">상관없음</option>
+            <option value="onboard">내장 그래픽</option>
+            <option>RTX 3050</option><option>RTX 4050</option><option>RTX 4060</option><option>RTX 4070</option><option>RTX 5060</option>
+          </select>
+        </div>
+        <div>
+          <label for="screen">화면 크기 (노트북)</label>
+          <select id="screen">
+            <option value="">상관없음</option>
+            <option value="13 inch">13~14인치</option>
+            <option value="15.6 inch">15~16인치</option>
+            <option value="17 inch">17인치 이상</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+    <div>
+      <label>상태</label>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="cond" id="c-new" value="new" checked><label for="c-new">새 제품</label>
+        <input type="radio" name="cond" id="c-used" value="used"><label for="c-used">중고</label>
+        <input type="radio" name="cond" id="c-both" value="both"><label for="c-both">둘 다</label>
+      </div>
+    </div>
+    <div>
+      <label for="city">지역 (선택)</label>
+      <input id="city" placeholder="예: 호찌민 7군">
+    </div>
+    <button class="btn" id="go" type="submit">검색하기</button>
+  </form>
+
+  <section id="storesSec">
+    <h2>믿을 수 있는 곳에서 바로 찾기 <span class="example" id="exTag">예시</span></h2>
+    <p class="sub" id="storesSub">누르면 각 매장의 검색 결과가 새 탭에서 열립니다.</p>
+    <p class="specline" id="specline" hidden>검색어: <b id="searchTerm"></b></p>
+    <div class="legend" style="margin-bottom:10px">
+      <span class="chip t-official">공식 매장 · 보증</span>
+      <span class="chip t-platform">플랫폼 직판</span>
+      <span class="chip t-caution">중고 · 직접 확인</span>
+      <span class="chip t-compare">가격 비교</span>
+    </div>
+    <div class="stores" id="stores"></div>
+  </section>
+
+  <section class="card" id="aiSec">
+    <div>
+      <h2>AI 구매 점검</h2>
+      <p class="sub" style="margin:0">예상 가격대, 가짜·바가지 구별법, 어디서 먼저 볼지 정리해 드려요.</p>
+    </div>
+    <div id="aiBody"><p class="status">검색하기를 누르면 이 제품에 맞춰 점검해 드립니다.</p></div>
+  </section>
+
+  <section class="card">
+    <div>
+      <h2>실시간 가격 비교는 Claude 채팅에서</h2>
+      <p class="sub" style="margin:0">이 앱은 매장 사이트를 직접 읽지 못해요. 아래 문장을 복사해서 Claude 채팅에 붙여 넣으면 지금 가격과 리뷰를 찾아 비교해 드립니다.</p>
+    </div>
+    <div class="copybox">
+      <textarea id="prompt" readonly></textarea>
+      <button class="btn ghost" id="copy" type="button">문장 복사</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const enc = s => encodeURIComponent(s);
+const g = (site, q) => `https://www.google.com/search?q=${enc(q)}+site%3A${site}`;
+const STORES = [
+  {name:"Phong Vũ", tier:"official", cats:["computer"], url:q=>g("phongvu.vn",q), note:"컴퓨터 전문 체인, 노트북·부품 정품"},
+  {name:"GearVN", tier:"official", cats:["computer"], url:q=>g("gearvn.com",q), note:"게이밍 노트북·PC 전문 매장"},
+  {name:"Thế Giới Di Động", tier:"official", cats:["phone","appliance","computer"], url:q=>`https://www.thegioididong.com/tim-kiem?key=${enc(q)}`, note:"전국 오프라인 매장, 공식 보증·교환"},
+  {name:"Điện Máy Xanh", tier:"official", cats:["appliance","home"], url:q=>`https://www.dienmayxanh.com/tim-kiem?key=${enc(q)}`, note:"가전 전문, 설치·보증 서비스"},
+  {name:"CellphoneS", tier:"official", cats:["phone","computer"], url:q=>`https://cellphones.com.vn/catalogsearch/result?q=${enc(q)}`, note:"휴대폰·노트북 정품 대리점"},
+  {name:"FPT Shop", tier:"official", cats:["phone","appliance","computer"], url:q=>g("fptshop.com.vn",q), note:"FPT 그룹 직영 매장"},
+  {name:"Nguyễn Kim", tier:"official", cats:["appliance"], url:q=>g("nguyenkim.com",q), note:"대형 가전 매장 체인"},
+  {name:"Hasaki", tier:"official", cats:["beauty"], url:q=>`https://hasaki.vn/catalogsearch/result?q=${enc(q)}`, note:"화장품 정품 매장, 오프라인 지점 다수"},
+  {name:"Guardian", tier:"official", cats:["beauty"], url:q=>g("guardian.com.vn",q), note:"헬스·뷰티 체인"},
+  {name:"Con Cưng", tier:"official", cats:["baby"], url:q=>g("concung.com",q), note:"유아용품 전문 체인"},
+  {name:"Tiki", tier:"platform", cats:["computer","phone","appliance","beauty","baby","home"], url:q=>`https://tiki.vn/search?q=${enc(q)}`, note:"‘Tiki Trading’ 표시 상품만 고르세요"},
+  {name:"Chotot", tier:"caution", cats:["*"], used:true, url:q=>`https://www.chotot.com/mua-ban?q=${enc(q)}`, note:"개인 중고 거래. 직접 만나 확인 후 결제"},
+  {name:"Websosanh", tier:"compare", cats:["*"], url:q=>g("websosanh.vn",q), note:"여러 쇼핑몰 가격을 한눈에 비교"},
+];
+const TIER_LABEL = {official:"공식 보증", platform:"직판 확인", caution:"주의", compare:"비교"};
+
+const $ = id => document.getElementById(id);
+function cond(){ return document.querySelector('input[name="cond"]:checked').value; }
+const PC_FIELDS = ["pcType","cpu","ram","ramType","storage","storageType","gpu","screen"];
+const PC_TYPE_VI = {laptop:"laptop", gaming:"laptop gaming", minipc:"mini PC", desktop:"PC", aio:"PC all in one", macbook:"MacBook"};
+const PC_TYPE_KO = {laptop:"노트북", gaming:"게이밍 노트북", minipc:"미니 PC", desktop:"데스크톱 본체", aio:"일체형 PC", macbook:"맥북"};
+function read(){
+  const v = { q:$("q").value.trim(), cat:$("cat").value, cond:cond(), budget:$("budget").value.trim(), city:$("city").value.trim(), pc:{} };
+  if (v.cat === "computer") PC_FIELDS.forEach(k => { const x = $(k).value; if (x) v.pc[k] = x; });
+  return v;
+}
+// Vietnamese store search string: model name + device type + key specs (stores match short queries best)
+function searchTerm(v){
+  if (v.cat !== "computer") return v.q;
+  const p = v.pc || {};
+  const parts = [];
+  if (p.pcType && !(v.q && /macbook/i.test(v.q))) parts.push(PC_TYPE_VI[p.pcType]);
+  if (v.q) parts.push(v.q);
+  if (p.cpu && !v.q) parts.push(p.cpu.replace(/^(Intel|AMD|Apple) /,""));
+  if (p.ram) parts.push(p.ram);
+  if (p.storage) parts.push(p.storage + (p.storageType && p.storageType.startsWith("SSD") ? " SSD" : p.storageType ? " " + p.storageType : ""));
+  if (p.gpu && p.gpu !== "onboard" && !v.q) parts.push(p.gpu);
+  return parts.join(" ") || "laptop";
+}
+function specKo(v){
+  const p = v.pc || {};
+  return [p.pcType && PC_TYPE_KO[p.pcType], p.cpu, p.ram && ("램 " + p.ram + (p.ramType ? " " + p.ramType : "")), !p.ram && p.ramType && ("램 " + p.ramType),
+    p.storage && (p.storage + (p.storageType ? " " + p.storageType : "")), !p.storage && p.storageType,
+    p.gpu && (p.gpu === "onboard" ? "내장 그래픽" : p.gpu), p.screen && $("screen").selectedOptions[0]?.text]
+    .filter(Boolean).join(", ");
+}
+function togglePc(){
+  const on = $("cat").value === "computer";
+  $("pc").hidden = !on; $("qHint").hidden = !on;
+}
+$("cat").addEventListener("change", togglePc);
+
+function renderStores(v, override){
+  const term = override || searchTerm(v);
+  $("specline").hidden = v.cat !== "computer" && !override;
+  $("searchTerm").textContent = term;
+  v = {...v, q: term};
+  const list = STORES.filter(s => {
+    if (s.used) return v.cond !== "new";
+    if (v.cond === "used" && s.tier !== "compare") return false;
+    return s.cats.includes("*") || s.cats.includes(v.cat);
+  });
+  const qUsed = v.cond === "used" ? v.q + " cũ" : v.q;
+  $("stores").innerHTML = "";
+  list.forEach(s => {
+    const a = document.createElement("a");
+    a.className = "store t-" + s.tier;
+    a.href = s.url(s.used ? v.q : qUsed);
+    a.target = "_blank"; a.rel = "noopener";
+    a.innerHTML = `<div class="meta"><div class="name"></div><div class="note"></div></div><span class="chip"></span><span class="arrow" aria-hidden="true">↗</span>`;
+    a.querySelector(".name").textContent = s.name;
+    a.querySelector(".note").textContent = s.note;
+    a.querySelector(".chip").textContent = TIER_LABEL[s.tier];
+    $("stores").appendChild(a);
+  });
+  if (v.cond === "used") {
+    $("storesSub").textContent = "중고는 보증이 없어요. 직접 만나서 작동을 확인하고, 선입금은 하지 마세요.";
+  } else {
+    $("storesSub").textContent = "누르면 각 매장의 검색 결과가 새 탭에서 열립니다.";
+  }
+}
+
+function renderPrompt(v){
+  const condTxt = {new:"새 제품", used:"중고", both:"새 제품과 중고 모두"}[v.cond];
+  $("prompt").value =
+    (v.cat === "computer"
+      ? `베트남에서 컴퓨터를 사려고 해. ${v.q ? `모델: "${v.q}". ` : ""}${specKo(v) ? `원하는 사양: ${specKo(v)}. ` : ""}상태: ${condTxt}. `
+      : `베트남에서 "${v.q}" (${condTxt})를 사려고 해. `) +
+    (v.budget ? `예산은 ${v.budget} VND 정도야. ` : "") +
+    (v.city ? `지역은 ${v.city}. ` : "") +
+    (v.cat === "computer"
+      ? `쇼피·라자다·틱톡 말고 Phong Vũ, GearVN, FPT Shop, CellphoneS, Thế Giới Di Động, Tiki(Tiki Trading) 같은 공식 보증 매장`
+      : `쇼피·라자다·틱톡 말고 Thế Giới Di Động, Điện Máy Xanh, FPT Shop, CellphoneS, Tiki(Tiki Trading), Hasaki 같은 공식 보증 매장`) +
+    (v.cond !== "new" ? `과 Chotot 중고` : "") +
+    `에서 지금 가격, 보증 기간, 리뷰를 비교해서 가장 믿을 만하고 저렴한 곳을 골라줘.`;
+}
+
+function li(arr){ return (arr||[]).map(x => `<li>${esc(x)}</li>`).join(""); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+let samplePromise = null;
+function getSample(){ if(!samplePromise) samplePromise = window.claude ? window.claude.use("sample") : Promise.resolve(null); return samplePromise; }
+
+async function runAI(v){
+  const body = $("aiBody");
+  const sample = await getSample();
+  if (!sample) { body.innerHTML = `<p class="status">이 화면에서는 AI 점검을 쓸 수 없어요. 위 매장 링크와 아래 채팅용 문장을 이용해 주세요.</p>`; return; }
+  body.innerHTML = `<p class="status">점검하는 중이에요…</p>`;
+  $("go").disabled = true;
+  const condTxt = {new:"new", used:"used", both:"new or used"}[v.cond];
+  const prompt = `You help a Korean shopper in Vietnam avoid fake products and overpricing.
+Product: "${v.q || "(no model name, choose by specs)"}". Category: ${v.cat}.${v.cat === "computer" && specKo(v) ? ` Wanted specs: ${specKo(v)}. If no model name is given, suggest 2-3 concrete models sold in Vietnam that match these specs inside "whereFirst", and check that the specs are compatible (e.g. Mac uses unified memory, soldered LPDDR RAM cannot be upgraded, mini PCs often allow RAM/SSD upgrades).` : ""} Condition wanted: ${condTxt}. Budget: ${v.budget||"not given"} VND. City: ${v.city||"not given"}.
+Return ONLY JSON with these keys, all text values in Korean except searchVi:
+{"searchVi": best Vietnamese search keyword for local stores,
+ "identified": what the product is in one short sentence (say if the model name looks unclear),
+ "priceNew": typical new price range in Vietnam in VND like "2.300.000 – 2.800.000₫" or "알 수 없음",
+ "priceUsed": typical used price range or "알 수 없음",
+ "budgetNote": one sentence comparing the budget to the range (or empty),
+ "whereFirst": array of up to 3 short strings: which trusted Vietnamese stores to check first and why,
+ "checks": array of 3-5 things to verify before buying (warranty type, official distributor, VAT invoice, IMEI/serial, etc.),
+ "redFlags": array of 3-5 signs this listing is fake or a scam for this specific product}
+Your prices are estimates from general knowledge, not live data; keep ranges realistic and wide rather than precise.`;
+  try {
+    const r = await sample.json(prompt, { modelTier: "default" });
+    body.innerHTML = `
+      <p style="margin:0">${esc(r.identified||"")}</p>
+      <div class="kv">
+        <div><b>새 제품 예상가</b><span class="vi">${esc(r.priceNew||"알 수 없음")}</span></div>
+        <div><b>중고 예상가</b><span class="vi">${esc(r.priceUsed||"알 수 없음")}</span></div>
+        <div style="grid-column:1/-1"><b>베트남어 검색어</b><span class="vi">${esc(r.searchVi||v.q)}</span></div>
+      </div>
+      ${r.budgetNote ? `<p style="margin:0">${esc(r.budgetNote)}</p>` : ""}
+      <div class="list"><h3>먼저 볼 곳</h3><ul>${li(r.whereFirst)}</ul></div>
+      <div class="list"><h3>사기 전에 확인할 것</h3><ul>${li(r.checks)}</ul></div>
+      <div class="list red"><h3>이러면 가짜·사기 의심</h3><ul>${li(r.redFlags)}</ul></div>
+      <p class="disclaimer">예상가는 AI가 일반 지식으로 추정한 값이에요. 실제 가격은 위 매장 링크에서 확인하세요.</p>`;
+    if (r.searchVi && r.searchVi !== searchTerm(v)) renderStores(v, r.searchVi);
+  } catch (e) {
+    const code = e && e.code;
+    body.innerHTML = code === "not_granted"
+      ? `<p class="status">AI 점검 권한이 허용되지 않았어요. 매장 링크와 채팅용 문장은 그대로 쓸 수 있어요.</p>`
+      : code === "rate_limited"
+      ? `<p class="err">요청이 많아 잠시 막혔어요. 1분쯤 뒤에 다시 검색해 주세요.</p>`
+      : `<p class="err">점검을 불러오지 못했어요. 다시 검색해 주세요.</p>`;
+  } finally { $("go").disabled = false; }
+}
+
+$("budget").addEventListener("input", e => {
+  const d = e.target.value.replace(/\D/g, "");
+  e.target.value = d ? Number(d).toLocaleString("en-US") : "";
+});
+
+$("f").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = read();
+  if (!v.q && !(v.cat === "computer" && Object.keys(v.pc).length)) {
+    $("q").placeholder = v.cat === "computer" ? "모델명을 넣거나 아래 사양을 하나 이상 고르세요" : "제품명이나 모델명을 입력하세요";
+    $("q").focus(); return;
+  }
+  $("exTag").hidden = true;
+  renderStores(v); renderPrompt(v); runAI(v);
+  try { localStorage.setItem("ansim-last", JSON.stringify(v)); } catch(_) {}
+});
+
+$("copy").addEventListener("click", async () => {
+  const t = $("prompt");
+  try { await navigator.clipboard.writeText(t.value); $("copy").textContent = "복사했어요"; }
+  catch(_) { t.focus(); t.select(); $("copy").textContent = "선택됨 — 길게 눌러 복사"; }
+  setTimeout(() => $("copy").textContent = "문장 복사", 2200);
+});
+
+// Initial state: last search if any, otherwise a marked example
+(function init(){
+  let v = null;
+  try { v = JSON.parse(localStorage.getItem("ansim-last") || "null"); } catch(_) {}
+  const saved = !!(v && (v.q || (v.pc && Object.keys(v.pc).length)));
+  if (!saved) v = { q:"", cat:"computer", cond:"new", budget:"", city:"", pc:{pcType:"minipc", ram:"16GB", ramType:"DDR5", storage:"512GB", storageType:"SSD NVMe"} };
+  $("q").value = v.q || ""; $("cat").value = v.cat; $("budget").value = v.budget || ""; $("city").value = v.city || "";
+  const r = document.querySelector(`input[name="cond"][value="${v.cond}"]`); if (r) r.checked = true;
+  PC_FIELDS.forEach(k => { $(k).value = (v.pc && v.pc[k]) || ""; });
+  $("exTag").hidden = saved;
+  togglePc();
+  v.pc = v.pc || {};
+  renderStores(v); renderPrompt(v);
+})();
+</script>
+
+</body>
+</html>
