@@ -9,7 +9,8 @@ permissions:
   contents: read
 
 env:
-  NETLIFY_SITE_ID: 97bc0225-668f-4ce6-9730-152c49dd63a6
+  # 토큰 주인 계정에서 이 이름의 프로젝트를 찾고, 없으면 새로 만든다
+  NETLIFY_SITE_NAME: vietshoping-app
 
 jobs:
   deploy:
@@ -32,7 +33,7 @@ jobs:
             echo "::error::NETLIFY_AUTH_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions 에 추가하세요."
             exit 1
           fi
-          # 토큰 점검: 어느 계정 토큰인지, 이 프로젝트에 접근되는지 먼저 확인
+          # 토큰 점검
           code=$(curl -s -o /tmp/u.json -w "%{http_code}" -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/user)
           if [ "$code" != "200" ]; then
             echo "::error::Netlify 토큰이 올바르지 않습니다 (HTTP $code). 토큰 이름이 아니라 만들 때 한 번만 보이는 긴 토큰 값을 넣었는지 확인하세요."
@@ -40,14 +41,23 @@ jobs:
           fi
           email=$(python3 -c "import json;e=json.load(open('/tmp/u.json')).get('email','');print(e[:3]+'***'+e[e.find('@'):])")
           echo "토큰 계정: $email"
-          code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID)
-          if [ "$code" != "200" ]; then
-            echo "::error::이 토큰($email)으로는 vietshoping 프로젝트가 보이지 않습니다 (HTTP $code). vietshoping 프로젝트가 있는 Netlify 계정으로 로그인해서 토큰을 다시 만드세요."
-            exit 1
+
+          # 프로젝트 찾기 또는 만들기
+          curl -s -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" "https://api.netlify.com/api/v1/sites?name=$NETLIFY_SITE_NAME&filter=all&per_page=100" > /tmp/sites.json
+          NETLIFY_SITE_ID=$(python3 -c "import json,os;n=os.environ['NETLIFY_SITE_NAME'];print(next((x['id'] for x in json.load(open('/tmp/sites.json')) if x.get('name')==n),''))")
+          if [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "프로젝트 $NETLIFY_SITE_NAME 가 없어 새로 만듭니다."
+            code=$(curl -s -o /tmp/new.json -w "%{http_code}" -X POST -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" -H "Content-Type: application/json" -d "{\"name\":\"$NETLIFY_SITE_NAME\"}" https://api.netlify.com/api/v1/sites)
+            if [ "$code" != "201" ] && [ "$code" != "200" ]; then
+              echo "::error::프로젝트를 만들지 못했습니다 (HTTP $code): $(cat /tmp/new.json | head -c 300)"
+              exit 1
+            fi
+            NETLIFY_SITE_ID=$(python3 -c "import json;print(json.load(open('/tmp/new.json'))['id'])")
           fi
+          echo "프로젝트: $NETLIFY_SITE_NAME ($NETLIFY_SITE_ID)"
           npx -y netlify-cli@23 deploy --prod --dir=public --functions=netlify/functions --site="$NETLIFY_SITE_ID" --message "GitHub manual deploy ${GITHUB_SHA::7}"
 
       - name: Smoke test
         run: |
           sleep 5
-          curl -sS "https://vietshoping.netlify.app/api/search?q=iphone%2016&used=2" | head -c 1500; echo
+          curl -sS "https://vietshoping-app.netlify.app/api/search?q=iphone%2016&used=2" | head -c 1500; echo

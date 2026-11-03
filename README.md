@@ -11,7 +11,7 @@
 
 - `public/index.html` — 앱 화면 (빌드 없는 단일 페이지)
 - `netlify/functions/search.mts` — 가격 비교 서버 (`/api/search?q=검색어&used=0|1|2`)
-- `.github/workflows/netlify.yml` — Netlify 수동 배포 (메인 주소: https://vietshoping.netlify.app)
+- `.github/workflows/netlify.yml` — Netlify 수동 배포 (메인 주소: https://vietshoping-app.netlify.app)
 - `.github/workflows/deploy.yml` — GitHub Pages 수동 배포 (Netlify 서버를 불러 씀)
 
 ## 처음 한 번 설정
