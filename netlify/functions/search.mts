@@ -71,8 +71,10 @@ async function tiki(q: string): Promise<Item[]> {
     .filter((p: any) => p && p.name && p.price)
     .map((p: any): Item => {
       const seller = p.seller_name || p.current_seller?.name || ""
-      const badges = JSON.stringify(p.badges_new || p.badges || [])
-      const trusted = /tiki trading/i.test(seller) || /tiki_trading|is_authentic|official/i.test(badges) || p.is_authentic === 1
+      const sellerType = String(p.visible_impression_info?.amplitude?.seller_type || "")
+      const tikiTrading = p.seller_id === 1 || /^tiki trading$/i.test(seller.trim())
+      const officialStore = p.is_from_official_store === true || (!tikiTrading && sellerType === "OFFICIAL_STORE")
+      const trusted = tikiTrading || officialStore
       return {
         store: "Tiki",
         tier: "platform",
@@ -84,7 +86,7 @@ async function tiki(q: string): Promise<Item[]> {
         rating: p.rating_average || null,
         reviews: p.review_count || null,
         sold: p.quantity_sold?.value || null,
-        seller: seller || undefined,
+        seller: tikiTrading ? "Tiki Trading" : officialStore ? `${seller} (공식 브랜드 매장)` : seller || undefined,
         trusted,
       }
     })
@@ -193,13 +195,6 @@ export default async (req: Request, _context: Context) => {
   const q = (u.searchParams.get("q") || "").trim().slice(0, 120)
   const mode = u.searchParams.get("used") || "0" // 0 새 제품, 1 중고, 2 둘 다
   const only = (u.searchParams.get("stores") || "").split(",").filter(Boolean)
-
-  if (u.searchParams.get("debug") === "tiki") {
-    const r = await get(`https://tiki.vn/api/v2/products?limit=8&include=advertisement&aggregations=2&q=${encodeURIComponent(q)}`, { headers: { accept: "application/json" } })
-    const d: any = await r.json()
-    const pick = (p: any) => Object.fromEntries(Object.entries(p).filter(([k]) => /seller|badge|authentic|official|tiki|brand|visible|impression|is_|tracking/i.test(k)).map(([k, v]) => [k, JSON.stringify(v).slice(0, 600)]))
-    return Response.json({ keys: Object.keys(d.data?.[0] || {}), items: (d.data || []).map((p: any) => ({ name: p.name, ...pick(p) })) }, { headers: cors })
-  }
 
   if (q.length < 2) {
     return Response.json({ error: "검색어를 2글자 이상 입력하세요." }, { status: 400, headers: cors })

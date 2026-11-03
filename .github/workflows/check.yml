@@ -12,9 +12,6 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Tiki debug
-        continue-on-error: true
-        run: curl -sS --max-time 30 "https://vietshoping.netlify.app/api/search?q=noi%20chien%20philips&debug=tiki" | python3 -m json.tool --no-ensure-ascii | head -150
       - name: Query API
         env:
           QUERIES: ${{ inputs.queries }}
@@ -32,7 +29,7 @@ jobs:
               print('NOT JSON:', open('r.json').read()[:300]); raise SystemExit
           for s in j.get('sources', []):
               print(f"  {s['store']:18} ok={s['ok']} count={s['count']} {s.get('error','')} {s['ms']}ms")
-          for i in j.get('items', [])[:12]:
-              print(f"    - {i['store'][:10]:10} {str(i.get('price')):>11} {'T' if i.get('trusted') else ' '} {i['name'][:60]} | {i['url'][:70]}")
+          for i in sorted(j.get('items', []), key=lambda x: (x['store']!='Tiki'))[:12]:
+              print(f"    - {i['store'][:10]:10} {str(i.get('price')):>11} {'T' if i.get('trusted') else ' '} {(i.get('seller') or '')[:22]:22} {i['name'][:55]}")
           PY
           done
