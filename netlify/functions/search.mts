@@ -116,42 +116,33 @@ async function phongvu(q: string): Promise<Item[]> {
   const res = await get("https://discovery.tekoapis.com/api/v2/search-skus-v2", {
     method: "POST",
     headers: { "content-type": "application/json", accept: "application/json", origin: "https://phongvu.vn", referer: "https://phongvu.vn/" },
-    body: JSON.stringify({
-      terminalId: 4,
-      page: 1,
-      pageSize: PER_STORE,
-      slug: "/search",
-      filter: {},
-      sorting: { sort: "SORT_BY_CREATED_AT", order: "ORDER_BY_DESCENDING" },
-      isNeedFeaturedProducts: false,
-      query: q,
-    }),
+    body: JSON.stringify({ terminalId: 4, page: 1, pageSize: PER_STORE, filter: {}, isNeedFeaturedProducts: false, query: q }),
   })
   const j: any = await res.json()
   const list = j?.data?.products || j?.products || []
   return list
     .map((p: any): Item | null => {
-      const info = p.productInfo || p
-      const price = p.prices?.[0] || p.price || {}
-      const name = info.name || info.displayName
+      const name = p.name || p.productInfo?.name
       if (!name) return null
-      const canonical = info.canonical || info.url || (info.sku ? `/${info.sku}` : "")
+      const canonical = p.canonical || p.productInfo?.canonical || ""
+      const seller = p.seller?.displayName || ""
       return {
         store: "Phong Vũ",
         tier: "official",
         name,
-        price: num(price.latestPrice ?? price.sellPrice ?? price.terminalPrice),
-        oldPrice: num(price.supplierRetailPrice),
-        url: canonical.startsWith("http") ? canonical : `https://phongvu.vn${canonical.startsWith("/") ? "" : "/"}${canonical}`,
-        image: info.imageUrl,
-        trusted: true,
+        price: num(p.latestPrice ?? p.prices?.[0]?.latestPrice),
+        oldPrice: num(p.supplierRetailPrice ?? p.prices?.[0]?.supplierRetailPrice),
+        url: canonical.startsWith("http") ? canonical : `https://phongvu.vn/${canonical.replace(/^\//, "")}`,
+        image: p.imageUrl || p.productInfo?.imageUrl,
+        seller: seller || undefined,
+        trusted: !seller || /phong v[uũ]/i.test(seller),
       }
     })
     .filter(Boolean) as Item[]
 }
 
 // ---------- Thế Giới Di Động (검색 결과 HTML) ----------
-async function tgdd(q: string): Promise<Item[]> {
+export async function tgdd(q: string): Promise<Item[]> {
   const res = await get(`https://www.thegioididong.com/tim-kiem?key=${encodeURIComponent(q)}`, {
     headers: { accept: "text/html" },
   })
@@ -185,7 +176,7 @@ async function tgdd(q: string): Promise<Item[]> {
 }
 
 const STORES: { name: string; fn: (q: string) => Promise<Item[]>; used: boolean }[] = [
-  { name: "Thế Giới Di Động", fn: tgdd, used: false },
+  // Thế Giới Di Động 는 해외 서버 접속을 막아서 제외 (매장 바로가기 링크로만 제공)
   { name: "Phong Vũ", fn: phongvu, used: false },
   { name: "Tiki", fn: tiki, used: false },
   { name: "Chotot", fn: chotot, used: true },
@@ -202,6 +193,13 @@ export default async (req: Request, _context: Context) => {
   const q = (u.searchParams.get("q") || "").trim().slice(0, 120)
   const mode = u.searchParams.get("used") || "0" // 0 새 제품, 1 중고, 2 둘 다
   const only = (u.searchParams.get("stores") || "").split(",").filter(Boolean)
+
+  if (u.searchParams.get("debug") === "tiki") {
+    const r = await get(`https://tiki.vn/api/v2/products?limit=8&include=advertisement&aggregations=2&q=${encodeURIComponent(q)}`, { headers: { accept: "application/json" } })
+    const d: any = await r.json()
+    const pick = (p: any) => Object.fromEntries(Object.entries(p).filter(([k]) => /seller|badge|authentic|official|tiki|brand|visible|impression|is_|tracking/i.test(k)).map(([k, v]) => [k, JSON.stringify(v).slice(0, 600)]))
+    return Response.json({ keys: Object.keys(d.data?.[0] || {}), items: (d.data || []).map((p: any) => ({ name: p.name, ...pick(p) })) }, { headers: cors })
+  }
 
   if (q.length < 2) {
     return Response.json({ error: "검색어를 2글자 이상 입력하세요." }, { status: 400, headers: cors })

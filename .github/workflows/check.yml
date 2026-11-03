@@ -12,6 +12,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Tiki debug
+        continue-on-error: true
+        run: curl -sS --max-time 30 "https://vietshoping.netlify.app/api/search?q=noi%20chien%20philips&debug=tiki" | python3 -m json.tool --no-ensure-ascii | head -150
       - name: Query API
         env:
           QUERIES: ${{ inputs.queries }}
