@@ -1,0 +1,8 @@
+{
+  "name": "vietshoping",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@netlify/functions": "^4.1.0"
+  }
+}

@@ -1,0 +1,40 @@
+name: Deploy to Netlify (manual)
+
+# 수동 실행 전용: Actions 탭 → "Deploy to Netlify (manual)" → Run workflow
+# 필요한 것: 저장소 Secrets 에 NETLIFY_AUTH_TOKEN (Netlify 개인 액세스 토큰)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NETLIFY_SITE_ID: 97bc0225-668f-4ce6-9730-152c49dd63a6
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Deploy (production)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ]; then
+            echo "::error::NETLIFY_AUTH_TOKEN 시크릿이 없습니다. Settings → Secrets and variables → Actions 에 추가하세요."
+            exit 1
+          fi
+          npx -y netlify-cli@23 deploy --prod --dir=public --functions=netlify/functions --site="$NETLIFY_SITE_ID" --message "GitHub manual deploy ${GITHUB_SHA::7}"
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -sS "https://vietshoping.netlify.app/api/search?q=iphone%2016&used=2" | head -c 1500; echo
