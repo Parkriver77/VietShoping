@@ -1,0 +1,41 @@
+name: Probe stores (manual, debug)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tiki raw fields
+        run: |
+          curl -s --max-time 20 -A "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1" "https://tiki.vn/api/v2/products?limit=6&include=advertisement&aggregations=2&q=noi%20chien%20philips" -o t.json
+          python3 -c "
+          import json;d=json.load(open('t.json'))['data']
+          for p in d[:6]:
+              print('---', p.get('name','')[:60])
+              for k in ['seller_name','seller_id','seller_product_id','is_authentic','badges','badges_new','badges_v3','visible_impression_info','tiki_verified','is_from_official_store','official_store','current_seller','brand_name','inventory_status']:
+                  if k in p: print('  ',k,'=',json.dumps(p[k],ensure_ascii=False)[:400])
+          print('ALL KEYS:', sorted(d[0].keys()))
+          "
+      - name: TGDD timing
+        run: |
+          for u in "https://www.thegioididong.com/tim-kiem?key=iphone%2016" "https://www.thegioididong.com/" "https://www.dienmayxanh.com/tim-kiem?key=noi%20chien"; do
+            curl -s -o b.html --max-time 25 -A "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1" -H "accept-language: vi-VN,vi;q=0.9" -w "$u -> %{http_code} %{time_total}s %{size_download}B\n" "$u" || echo "$u -> FAIL"
+            grep -o 'data-name="[^"]*"' b.html | head -3; grep -o 'data-price="[^"]*"' b.html | head -3
+          done
+      - name: Phong Vu endpoints
+        run: |
+          for path in api/v2/search-skus-v2 api/v1/search-skus-v2 api/v2/search-skus; do
+            curl -s --max-time 20 -X POST "https://discovery.tekoapis.com/$path" -H "content-type: application/json" -H "origin: https://phongvu.vn" -H "referer: https://phongvu.vn/" \
+              -d '{"terminalId":4,"page":1,"pageSize":3,"slug":"/search","filter":{},"isNeedFeaturedProducts":false,"query":"laptop asus"}' -w "\n$path -> %{http_code}\n" | tail -c 700; echo
+          done
+          curl -s --max-time 20 -o p.html -w "phongvu search page -> %{http_code} %{size_download}B\n" -A "Mozilla/5.0" "https://phongvu.vn/search?router=productListing&query=laptop%20asus"
+          grep -o '"__NEXT_DATA__"' p.html | head -1; grep -o 'https://[a-z.\-]*tekoapis.com/[a-zA-Z0-9/_\-]*' p.html | sort -u | head -20
+          grep -o '"latestPrice":[0-9]*' p.html | head -3; grep -o '"name":"[^"]\{10,80\}"' p.html | head -5
+      - name: CellphoneS / FPT / Hasaki quick
+        run: |
+          for u in "https://cellphones.com.vn/catalogsearch/result?q=iphone%2016" "https://fptshop.com.vn/tim-kiem/iphone-16" "https://hasaki.vn/catalogsearch/result?q=sunscreen" "https://gearvn.com/search?type=product&q=mini%20pc"; do
+            curl -s -o x.html --max-time 20 -A "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1" -w "$u -> %{http_code} %{time_total}s %{size_download}B\n" "$u" || echo "$u FAIL"
+            grep -o -i 'price[^<]\{0,60\}[0-9][0-9.]*\(₫\|đ\)' x.html | head -2
+          done
