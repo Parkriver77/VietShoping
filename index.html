@@ -243,21 +243,22 @@ h2{font-size:1.05rem;margin:0 0 4px;font-weight:800}
 
 <script>
 const enc = s => encodeURIComponent(s);
-const g = (site, q) => `https://www.google.com/search?q=${enc(q)}+site%3A${site}`;
+const encPlus = s => s.trim().split(/\s+/).map(encodeURIComponent).join("+");
+const slug = s => s.trim().split(/\s+/).map(encodeURIComponent).join("-");
 const STORES = [
-  {name:"Phong Vũ", tier:"official", cats:["computer"], url:q=>g("phongvu.vn",q), note:"컴퓨터 전문 체인, 노트북·부품 정품"},
-  {name:"GearVN", tier:"official", cats:["computer"], url:q=>g("gearvn.com",q), note:"게이밍 노트북·PC 전문 매장"},
+  {name:"Phong Vũ", tier:"official", cats:["computer"], url:q=>`https://phongvu.vn/search?router=productListing&query=${encPlus(q)}`, note:"컴퓨터 전문 체인, 노트북·부품 정품"},
+  {name:"GearVN", tier:"official", cats:["computer"], url:q=>`https://gearvn.com/search?type=product&q=${enc(q)}`, note:"게이밍 노트북·PC 전문 매장"},
   {name:"Thế Giới Di Động", tier:"official", cats:["phone","appliance","computer"], url:q=>`https://www.thegioididong.com/tim-kiem?key=${enc(q)}`, note:"전국 오프라인 매장, 공식 보증·교환"},
   {name:"Điện Máy Xanh", tier:"official", cats:["appliance","home"], url:q=>`https://www.dienmayxanh.com/tim-kiem?key=${enc(q)}`, note:"가전 전문, 설치·보증 서비스"},
   {name:"CellphoneS", tier:"official", cats:["phone","computer"], url:q=>`https://cellphones.com.vn/catalogsearch/result?q=${enc(q)}`, note:"휴대폰·노트북 정품 대리점"},
-  {name:"FPT Shop", tier:"official", cats:["phone","appliance","computer"], url:q=>g("fptshop.com.vn",q), note:"FPT 그룹 직영 매장"},
-  {name:"Nguyễn Kim", tier:"official", cats:["appliance"], url:q=>g("nguyenkim.com",q), note:"대형 가전 매장 체인"},
+  {name:"FPT Shop", tier:"official", cats:["phone","appliance","computer"], url:q=>`https://fptshop.com.vn/tim-kiem/${slug(q)}`, note:"FPT 그룹 직영 매장"},
+  {name:"Nguyễn Kim", tier:"official", cats:["appliance"], url:q=>`https://www.nguyenkim.com/tim-kiem.html?tu-khoa=${encPlus(q)}`, note:"대형 가전 매장 체인"},
   {name:"Hasaki", tier:"official", cats:["beauty"], url:q=>`https://hasaki.vn/catalogsearch/result?q=${enc(q)}`, note:"화장품 정품 매장, 오프라인 지점 다수"},
-  {name:"Guardian", tier:"official", cats:["beauty"], url:q=>g("guardian.com.vn",q), note:"헬스·뷰티 체인"},
-  {name:"Con Cưng", tier:"official", cats:["baby"], url:q=>g("concung.com",q), note:"유아용품 전문 체인"},
+  {name:"Guardian", tier:"official", cats:["beauty"], url:q=>`https://www.guardian.com.vn/catalogsearch/result/?q=${encPlus(q)}`, note:"헬스·뷰티 체인"},
+  {name:"Con Cưng", tier:"official", cats:["baby"], url:q=>`https://concung.com/search?search_query=${encPlus(q)}`, note:"유아용품 전문 체인"},
   {name:"Tiki", tier:"platform", cats:["computer","phone","appliance","beauty","baby","home"], url:q=>`https://tiki.vn/search?q=${enc(q)}`, note:"‘Tiki Trading’ 표시 상품만 고르세요"},
   {name:"Chotot", tier:"caution", cats:["*"], used:true, url:q=>`https://www.chotot.com/mua-ban?q=${enc(q)}`, note:"개인 중고 거래. 직접 만나 확인 후 결제"},
-  {name:"Websosanh", tier:"compare", cats:["*"], url:q=>g("websosanh.vn",q), note:"여러 쇼핑몰 가격을 한눈에 비교"},
+  {name:"Websosanh", tier:"compare", cats:["*"], url:q=>`https://websosanh.vn/s/${encPlus(q)}.htm`, note:"여러 쇼핑몰 가격을 한눈에 비교"},
 ];
 const TIER_LABEL = {official:"공식 보증", platform:"직판 확인", caution:"주의", compare:"비교"};
 
